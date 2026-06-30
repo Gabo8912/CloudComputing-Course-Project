@@ -1,0 +1,47 @@
+name: Build and deploy Node app to Azure Web App
+
+# Build/Deployment pipeline (GitHub Actions variant).
+# Builds the Node.js app and deploys it to the Azure App Service.
+# Authentication uses the App Service publish profile, stored as the repository
+# secret AZURE_WEBAPP_PUBLISH_PROFILE.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/**"
+  workflow_dispatch: {} # allows running it manually from the Actions tab
+
+env:
+  AZURE_WEBAPP_NAME: clouddevops-dev-app-zxdpgx
+  NODE_VERSION: "20.x"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies (validate build)
+        working-directory: app
+        run: npm ci
+
+      - name: Package source
+        # node_modules is excluded on purpose: the App Service installs
+        # dependencies server-side (SCM_DO_BUILD_DURING_DEPLOYMENT=true).
+        working-directory: app
+        run: zip -r ../app.zip server.js package.json package-lock.json views
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: app.zip
