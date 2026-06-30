@@ -1,20 +1,27 @@
-#Definimos los plugins del proyecto (azure) y la version (declaramos dependecia)
+# Provider plugins and version constraints (declared dependencies).
 terraform {
-    required_providers {
-        azurerm = {
-            source = "hashicorp/azurerm"
-            version = "~> 3.0"
-            }
-        random = {
-        source = "hashicorp/random"
-        version = "~> 3.0"
-        }
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
     }
-    
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+
+  # Remote state backend.
+  # The storage account / container referenced here are created beforehand by
+  # the bootstrap scripts (see ../bootstrap). Values are supplied at init time:
+  #   terraform init -backend-config=backend.hcl
+  backend "azurerm" {}
 }
 
-#Declaramos el provider y el id de subscripcion,que esta en variables.tf, para autentificacion con azure.
+# Azure provider. The subscription id comes from variables.tf for authentication.
 provider "azurerm" {
-    features {}
-    subscription_id = var.subscription_id
+  features {}
+  subscription_id = var.subscription_id
 }

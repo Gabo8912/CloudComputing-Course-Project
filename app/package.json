@@ -1,0 +1,20 @@
+{
+  "name": "cloud-devops-image-app",
+  "version": "1.0.0",
+  "description": "Image storage app: lists and uploads blobs in Azure Storage using a Managed Identity, with a sensitive value read from Key Vault.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@azure/keyvault-secrets": "^4.9.0",
+    "@azure/storage-blob": "^12.26.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "multer": "^2.0.1"
+  }
+}

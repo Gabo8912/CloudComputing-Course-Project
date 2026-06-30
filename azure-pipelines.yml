@@ -1,0 +1,84 @@
+# Build & Deployment pipeline for the Node.js application (Part II).
+#
+# Two stages:
+#   Build  - install dependencies and publish the app as a pipeline artifact.
+#   Deploy - push the artifact to the Azure App Service.
+#
+# Prerequisites in Azure DevOps:
+#   * an ARM service connection (variable: azureServiceConnection)
+#   * the App Service must already exist (created by Terraform / Part I)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - app/*
+      - azure-pipelines.yml
+
+variables:
+  nodeVersion: "20.x"
+  # Override these in the pipeline UI / variable group to match your deployment.
+  azureServiceConnection: "azure-service-connection"
+  appServiceName: "clouddevops-dev-app"   # set to the Terraform output app_service_name
+  artifactName: "drop"
+
+stages:
+  - stage: Build
+    displayName: Build application
+    jobs:
+      - job: build
+        displayName: Install & package
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: NodeTool@0
+            displayName: Use Node $(nodeVersion)
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - script: npm ci --omit=dev
+            displayName: Install production dependencies
+            workingDirectory: app
+
+          - task: ArchiveFiles@2
+            displayName: Archive app
+            inputs:
+              rootFolderOrFile: app
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/app.zip
+              replaceExistingArchive: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publish artifact
+            inputs:
+              PathtoPublish: $(Build.ArtifactStagingDirectory)
+              ArtifactName: $(artifactName)
+
+  - stage: Deploy
+    displayName: Deploy to App Service
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: deploy
+        displayName: Deploy web app
+        pool:
+          vmImage: ubuntu-latest
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(artifactName)
+
+                - task: AzureWebApp@1
+                  displayName: Deploy to Azure Web App
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appType: webAppLinux
+                    appName: $(appServiceName)
+                    package: $(Pipeline.Workspace)/$(artifactName)/app.zip
+                    startUpCommand: "node server.js"

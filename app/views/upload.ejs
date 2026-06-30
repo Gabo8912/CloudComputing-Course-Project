@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloud DevOps - Upload</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 820px; margin: 2rem auto; padding: 0 1rem; color: #1b1b2f; }
+    h1 { color: #b3005e; }
+    form { background: #f6f6fa; padding: 1.5rem; border-radius: 8px; }
+    input[type=file] { display: block; margin: 1rem 0; }
+    button { background: #b3005e; color: #fff; border: 0; padding: .6rem 1.2rem; border-radius: 6px; cursor: pointer; }
+    a { color: #b3005e; }
+    .error { color: #c0392b; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Upload a file</h1>
+
+  <% if (error) { %>
+    <p class="error"><%= error %></p>
+  <% } %>
+
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <label for="file">Choose an image or file:</label>
+    <input id="file" type="file" name="file" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <p style="margin-top:1.5rem"><a href="/">← Back to file list (Web Page 1)</a></p>
+</body>
+</html>
